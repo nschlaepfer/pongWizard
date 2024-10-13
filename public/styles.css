@@ -1,0 +1,43 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+  background-color: #000;
+}
+
+#overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: #fff;
+  z-index: 10;
+}
+
+#scores {
+  margin-top: 10px;
+}
+
+#scores span {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 18px;
+}
+
+#status {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+#instructions {
+  margin-top: 20px;
+}
+
+#instructions ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+#instructions li {
+  margin-bottom: 5px;
+  font-size: 16px;
+}

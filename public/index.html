@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Multiplayer Pong</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="gameContainer"></div>
+  
+  <div id="overlay">
+    <div id="status">Waiting for another player...</div>
+    <div id="scores">
+      <span id="score1">Paddle 1: 0</span>
+      <span id="score2">Paddle 2: 0</span>
+    </div>
+    <div id="instructions">
+      <h3>Controls:</h3>
+      <ul>
+        <li>Move Up: Arrow Up</li>
+        <li>Move Down: Arrow Down</li>
+        <li>Catch Ball: 'C' Key</li>
+        <li>Return Ball: 'R' Key</li>
+        <li>Super Attack: Press 4 specific keys within 3 seconds</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Three.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  
+  <!-- Socket.IO Client -->
+  <script src="/socket.io/socket.io.js"></script>
+  
+  <!-- Main Client-Side JavaScript -->
+  <script src="main.js"></script>
+</body>
+</html>
