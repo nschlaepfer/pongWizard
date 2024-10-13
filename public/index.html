@@ -2,9 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>3D Multiplayer Pong</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Swing Indicator Styles */
+    #swingIndicator {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 120px;
+      height: 40px;
+      background-color: rgba(255, 215, 0, 0.8);
+      border-radius: 20px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #000;
+      font-size: 1.2em;
+      box-shadow: 0 0 10px 2px rgba(255, 215, 0, 0.6);
+      transition: opacity 0.3s ease;
+    }
+
+    /* Overlay Styles */
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      text-shadow: 2px 2px 4px #000000;
+    }
+
+    /* Status Styles */
+    #status {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+
+    /* Scores Styles */
+    #scores {
+      font-size: 1.5em;
+      margin-bottom: 20px;
+    }
+
+    /* Instructions Styles */
+    #instructions {
+      font-size: 1em;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 600px) {
+      #swingIndicator {
+        width: 80px;
+        height: 30px;
+        font-size: 1em;
+      }
+
+      #status {
+        font-size: 1.5em;
+      }
+
+      #scores {
+        font-size: 1.2em;
+      }
+
+      #instructions {
+        font-size: 0.9em;
+      }
+    }
+  </style>
 </head>
 <body>
   <div id="gameContainer"></div>
@@ -21,14 +96,22 @@
         <li>Move Up: Arrow Up</li>
         <li>Move Down: Arrow Down</li>
         <li>Catch Ball: 'C' Key</li>
-        <li>Return Ball: 'R' Key</li>
         <li>Super Attack: Press 4 specific keys within 3 seconds</li>
       </ul>
     </div>
   </div>
 
+  <!-- Swing Indicator -->
+  <div id="swingIndicator">Swing!</div>
+
+  <!-- Sound Effects -->
+  <audio id="swingSound" src="sounds/swing.wav"></audio>
+
   <!-- Three.js Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  
+  <!-- GSAP Library for Animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   
   <!-- Socket.IO Client -->
   <script src="/socket.io/socket.io.js"></script>

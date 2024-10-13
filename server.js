@@ -47,7 +47,8 @@ io.on('connection', (socket) => {
     players[socket.id] = {
       paddle: Object.keys(players).length === 0 ? 'paddle1' : 'paddle2',
       position: 0,
-      score: 0
+      score: 0,
+      velocity: 0 // Added velocity property for advanced physics
     };
     console.log(`Assigned ${socket.id} to ${players[socket.id].paddle}`);
     socket.emit('init', { 
@@ -65,38 +66,48 @@ io.on('connection', (socket) => {
   }
 
   // Handle Paddle Movement
-  socket.on('paddleMove', (yPos) => {
+  socket.on('paddleMove', (data) => {
     if (players[socket.id]) {
-      players[socket.id].position = yPos;
+      players[socket.id].position = data.y;
+      players[socket.id].velocity = data.velocity; // Update paddle velocity
       io.emit('paddleUpdate', { 
         paddle: players[socket.id].paddle, 
-        y: yPos 
+        y: data.y 
       });
     }
   });
 
   // Handle Catch Ball
-  socket.on('catchBall', () => {
+  socket.on('catchBall', (data) => {
     const player = players[socket.id];
     if (player) {
       const paddleX = player.paddle === 'paddle1' ? -10 : 10;
-      if (Math.abs(ball.position.x - paddleX) < 1 &&
-          Math.abs(ball.position.y - player.position) < 2) {
-        ball.velocity.x *= -1.1; // Increase speed on hit
-        io.emit('ballUpdate', ball);
-      }
-    }
-  });
+      const distanceX = Math.abs(ball.position.x - paddleX);
+      const distanceY = Math.abs(ball.position.y - player.position);
+      
+      // Check if ball is within paddle's hit zone
+      if (distanceX < 1 && distanceY < 4) { // Increased Y range for better hit detection
+        // Calculate collision normal based on paddle position
+        const collisionNormal = player.paddle === 'paddle1' ? 1 : -1;
 
-  // Handle Return Ball
-  socket.on('returnBall', () => {
-    const player = players[socket.id];
-    if (player) {
-      const paddleX = player.paddle === 'paddle1' ? -10 : 10;
-      if (Math.abs(ball.position.x - paddleX) < 1 &&
-          Math.abs(ball.position.y - player.position) < 2) {
-        ball.velocity.x *= -1.1; // Increase speed on hit
+        // Advanced Physics: Modify ball velocity based on paddle movement
+        ball.velocity.x = collisionNormal * Math.abs(ball.velocity.x) * 1.2; // Reverse and slightly increase speed
+
+        // Apply additional velocity based on paddle's movement
+        if (data.swinging) {
+          ball.velocity.x *= 1.5; // Further increase speed for swinging hit
+          ball.velocity.y += player.velocity * 0.2; // Greater influence from paddle movement
+        } else {
+          ball.velocity.y += player.velocity * 0.1; // Regular influence
+        }
+
+        // Limit the maximum speed of the ball to prevent it from going too fast
+        const maxSpeed = 0.2;
+        ball.velocity.x = Math.max(-maxSpeed, Math.min(maxSpeed, ball.velocity.x));
+        ball.velocity.y = Math.max(-maxSpeed, Math.min(maxSpeed, ball.velocity.y));
+
         io.emit('ballUpdate', ball);
+        io.emit('superAttack'); // Trigger any visual effects if needed
       }
     }
   });
@@ -109,6 +120,10 @@ io.on('connection', (socket) => {
       // Super Attack Effect: Drastically increase ball speed
       ball.velocity.x *= 2;
       ball.velocity.y *= 2;
+      // Limit the maximum speed after super attack
+      const maxSpeed = 0.4;
+      ball.velocity.x = Math.max(-maxSpeed, Math.min(maxSpeed, ball.velocity.x));
+      ball.velocity.y = Math.max(-maxSpeed, Math.min(maxSpeed, ball.velocity.y));
       io.emit('superAttack');
       console.log(`Super Attack by ${socket.id}: ${sequence}`);
     }

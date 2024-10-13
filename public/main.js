@@ -5,6 +5,8 @@ const socket = io();
 const statusDiv = document.getElementById('status');
 const score1Span = document.getElementById('score1');
 const score2Span = document.getElementById('score2');
+const swingIndicator = document.getElementById('swingIndicator'); // New Element
+const swingSound = new Audio('sounds/swing.wav'); // New Audio Element
 
 // Game Variables
 let playerPaddle = null;
@@ -14,11 +16,16 @@ let gameStarted = false;
 // Three.js Variables
 let scene, camera, renderer;
 let paddle1, paddle2, ball;
-let paddleSpeed = 0.2;
+let paddleSpeed = 2;
 
 // Super Attack Variables
 let superAttackSequence = [];
 let superAttackTimeout = null;
+
+// Add Swing Animation Variables
+let isSwinging = false;
+const swingDuration = 300; // milliseconds
+const swingAngle = Math.PI / 8; // Reduced angle for more realistic swing
 
 // Initialize Three.js Scene
 function initThreeJS() {
@@ -73,10 +80,6 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-// Initialize Three.js and Start Rendering
-initThreeJS();
-animate();
-
 // Handle Keyboard Input
 const keysPressed = {};
 
@@ -92,6 +95,7 @@ document.addEventListener('keyup', (event) => {
     keysPressed[event.key] = false;
 });
 
+// Handle Input Function
 function handleInput() {
     if (!gameStarted || !playerPaddle) return;
 
@@ -112,16 +116,58 @@ function handleInput() {
 
     if (moved) {
         playerPaddle.position.y = newY;
-        socket.emit('paddleMove', newY);
+        socket.emit('paddleMove', { y: newY, velocity: keysPressed['ArrowUp'] ? paddleSpeed : (-paddleSpeed) });
     }
 
-    // Handle Catch and Return
-    if (keysPressed['c'] || keysPressed['C']) {
-        socket.emit('catchBall');
+    // Handle Catch Ball (Swing)
+    if ((keysPressed['c'] || keysPressed['C']) && !isSwinging) {
+        initiateSwing();
+        socket.emit('catchBall', { swinging: true }); // Send swing state
     }
-    if (keysPressed['r'] || keysPressed['R']) {
-        socket.emit('returnBall');
-    }
+}
+
+// Swing Animation Function
+function initiateSwing() {
+    if (!playerPaddle) return;
+    isSwinging = true;
+
+    // Play Swing Sound
+    swingSound.currentTime = 0;
+    swingSound.play();
+
+    // Show Swing Indicator
+    swingIndicator.style.display = 'flex';
+    gsap.to(swingIndicator, {
+        opacity: 1,
+        duration: 0.1,
+        onComplete: () => {
+            gsap.to(swingIndicator, {
+                opacity: 0,
+                duration: 0.3,
+                delay: swingDuration / 1000,
+                onComplete: () => {
+                    swingIndicator.style.display = 'none';
+                }
+            });
+        }
+    });
+
+    // Tween the paddle rotation using GSAP for smooth animation
+    gsap.to(playerPaddle.rotation, {
+        z: swingAngle, // Rotate along Z-axis for bat-like swing
+        duration: swingDuration / 1000,
+        ease: "power2.out",
+        onComplete: () => {
+            gsap.to(playerPaddle.rotation, {
+                z: 0,
+                duration: swingDuration / 1000,
+                ease: "power2.in",
+                onComplete: () => {
+                    isSwinging = false;
+                }
+            });
+        }
+    });
 }
 
 // Handle Super Attack Input
@@ -202,3 +248,7 @@ socket.on('playerDisconnected', () => {
     statusDiv.textContent = 'Player disconnected. Waiting for another player...';
     gameStarted = false;
 });
+
+// Initialize Three.js and Start Rendering
+initThreeJS();
+animate();
